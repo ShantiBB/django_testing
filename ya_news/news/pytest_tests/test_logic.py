@@ -14,19 +14,19 @@ def test_anonymous_user_cant_create_comment(
         client, news_id, form_data
 ):
     news_url = reverse('news:detail', args=news_id)
+    assert Comment.objects.count() == 0
     client.post(news_url, data=form_data)
-    comments_count = Comment.objects.count()
-    assert comments_count == 0
+    assert Comment.objects.count() == 0
 
 
 @pytest.mark.django_db
 def test_user_can_create_comment(
         author_client, author, news, news_id, form_data
 ):
+    assert Comment.objects.count() == 0
     news_url = reverse('news:detail', args=news_id)
     author_client.post(news_url, data=form_data)
-    comments_count = Comment.objects.count()
-    assert comments_count == 1
+    assert Comment.objects.count() == 1
     comment = Comment.objects.get()
     assert comment.author == author
     assert comment.news == news
@@ -57,7 +57,13 @@ def test_author_can_delete_comment(
 
 
 def test_author_can_edit_comment(
-        author_client, comment, comment_id, news_id, form_data
+        author,
+        news,
+        author_client,
+        comment,
+        comment_id,
+        news_id,
+        form_data
 ):
     news_url = reverse('news:detail', args=news_id)
     url_to_comments = news_url + '#comments'
@@ -65,6 +71,8 @@ def test_author_can_edit_comment(
     response = author_client.post(edit_url, data=form_data)
     assertRedirects(response, url_to_comments)
     comment.refresh_from_db()
+    assert comment.author == author
+    assert comment.news == news
     assert comment.text == form_data['text']
 
 
@@ -78,6 +86,8 @@ def test_user_cant_delete_comment_of_another_user(
 
 
 def test_user_cant_edit_comment_of_another_user(
+    author,
+    news,
     not_author_client,
     comment,
     comment_id,
@@ -87,4 +97,6 @@ def test_user_cant_edit_comment_of_another_user(
     response = not_author_client.post(edit_url, data=form_data)
     assert response.status_code == HTTPStatus.NOT_FOUND
     comment.refresh_from_db()
+    assert comment.author == author
+    assert comment.news == news
     assert comment.text != form_data['text']
