@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, Client
 from django.urls import reverse
 
 from notes.models import Note
@@ -25,16 +25,19 @@ class TestContent(TestCase):
             slug='test-note',
             author=cls.author
         )
+        cls.client_author = Client()
+        cls.client_author.force_login(cls.author)
+        cls.client_another_author = Client()
+        cls.client_another_author.force_login(cls.another_author)
 
     def test_note_not_in_list_for_users(self):
         users = (
-            (self.author, True),
-            (self.another_author, False)
+            (self.client_author, True),
+            (self.client_another_author, False)
         )
         for user, access in users:
             with self.subTest(user=user):
-                self.client.force_login(user)
-                response = self.client.get(reverse('notes:list'))
+                response = user.get(reverse('notes:list'))
                 object_list = response.context['object_list']
                 self.assertEqual(self.note in object_list, access)
 
@@ -45,8 +48,9 @@ class TestContent(TestCase):
         )
         for page, args in pages:
             with self.subTest(page=page):
-                self.client.force_login(self.author)
-                response = self.client.get(reverse(page, args=args))
+                response = self.client_author.get(
+                    reverse(page, args=args)
+                )
                 self.assertIn('form', response.context)
                 self.assertIsInstance(
                     response.context['form'], NoteForm

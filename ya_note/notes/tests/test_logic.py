@@ -31,6 +31,7 @@ class TestLogic(TestCase):
         cls.add_url = reverse('notes:add')
 
     def test_user_can_create_note(self):
+        self.assertEqual(Note.objects.count(), 0)
         self.client.force_login(self.author)
         response = self.client.post(self.add_url, data=self.form)
         self.assertRedirects(response, reverse('notes:success'))
@@ -42,6 +43,7 @@ class TestLogic(TestCase):
         self.assertEqual(note.author, self.author)
 
     def test_anonymous_user_cant_create_note(self):
+        self.assertEqual(Note.objects.count(), 0)
         response = self.client.post(self.add_url, data=self.form)
         login_url = reverse('users:login')
         expected_url = f'{login_url}?next={self.add_url}'
