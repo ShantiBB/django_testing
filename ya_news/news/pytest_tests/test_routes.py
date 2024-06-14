@@ -19,11 +19,11 @@ NEWS_EDIT_AND_DELETE = ('news:edit', 'news:delete')
 @pytest.mark.parametrize(
     'page, args',
     (
-            ('news:home', None),
-            ('news:detail', pytest.lazy_fixture('news_id')),
-            ('users:login', None),
-            ('users:logout', None),
-            ('users:signup', None),
+        ('news:home', None),
+        ('news:detail', pytest.lazy_fixture('news_id')),
+        ('users:login', None),
+        ('users:logout', None),
+        ('users:signup', None),
     )
 )
 @pytest.mark.parametrize('status', (HTTPStatus.OK,))
@@ -55,9 +55,8 @@ def test_comment_redirect_for_anonymous_client(
 @pytest.mark.parametrize(
     'user, status',
     (
-            (pytest.lazy_fixture('author_client'), HTTPStatus.OK),
-            (pytest.lazy_fixture('not_author_client'),
-             HTTPStatus.NOT_FOUND)
+        (pytest.lazy_fixture('author_client'), HTTPStatus.OK),
+        (pytest.lazy_fixture('not_author_client'), HTTPStatus.NOT_FOUND)
     )
 )
 def test_availability_for_comment_edit_and_delete(
