@@ -3,11 +3,10 @@ from http import HTTPStatus
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from pytils.translit import slugify
 
 from notes.models import Note
-
 from notes.forms import WARNING
-from pytils.translit import slugify
 
 User = get_user_model()
 
@@ -31,11 +30,11 @@ class TestLogic(TestCase):
         cls.add_url = reverse('notes:add')
 
     def test_user_can_create_note(self):
-        self.assertEqual(Note.objects.count(), 0)
         self.client.force_login(self.author)
+        notes_count = Note.objects.count()
         response = self.client.post(self.add_url, data=self.form)
         self.assertRedirects(response, reverse('notes:success'))
-        self.assertEqual(Note.objects.count(), 1)
+        self.assertEqual(Note.objects.count(), notes_count + 1)
         note = Note.objects.get()
         self.assertEqual(note.title, self.form['title'])
         self.assertEqual(note.text, self.form['text'])
@@ -43,12 +42,12 @@ class TestLogic(TestCase):
         self.assertEqual(note.author, self.author)
 
     def test_anonymous_user_cant_create_note(self):
-        self.assertEqual(Note.objects.count(), 0)
+        notes_count = Note.objects.count()
         response = self.client.post(self.add_url, data=self.form)
         login_url = reverse('users:login')
         expected_url = f'{login_url}?next={self.add_url}'
         self.assertRedirects(response, expected_url)
-        self.assertEqual(Note.objects.count(), 0)
+        self.assertEqual(Note.objects.count(), notes_count)
 
     def test_not_unique_slug(self):
         self.client.force_login(self.author)

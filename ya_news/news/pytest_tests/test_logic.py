@@ -2,7 +2,6 @@ from http import HTTPStatus
 
 import pytest
 from django.urls import reverse
-
 from pytest_django.asserts import assertFormError, assertRedirects
 
 from news.forms import BAD_WORDS, WARNING
@@ -13,20 +12,20 @@ from news.models import Comment
 def test_anonymous_user_cant_create_comment(
         client, news_id, form_data
 ):
+    comments_count = Comment.objects.all().count()
     news_url = reverse('news:detail', args=news_id)
-    assert Comment.objects.count() == 0
     client.post(news_url, data=form_data)
-    assert Comment.objects.count() == 0
+    assert Comment.objects.count() == comments_count
 
 
 @pytest.mark.django_db
 def test_user_can_create_comment(
         author_client, author, news, news_id, form_data
 ):
-    assert Comment.objects.count() == 0
+    comments_count = Comment.objects.all().count()
     news_url = reverse('news:detail', args=news_id)
     author_client.post(news_url, data=form_data)
-    assert Comment.objects.count() == 1
+    assert Comment.objects.count() == comments_count + 1
     comment = Comment.objects.get()
     assert comment.author == author
     assert comment.news == news
